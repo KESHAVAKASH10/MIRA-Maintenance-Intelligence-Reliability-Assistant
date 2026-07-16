@@ -1,0 +1,42 @@
+# -----------------------
+# Python
+# -----------------------
+__pycache__/
+*.py[cod]
+
+# Virtual Environment
+mira_env/
+venv/
+
+# Environment Variables
+.env
+
+# -----------------------
+# Frontend
+# -----------------------
+frontend/node_modules/
+frontend/dist/
+
+# -----------------------
+# ChromaDB / Generated Data
+# -----------------------
+data/chroma/
+
+# -----------------------
+# VS Code
+# -----------------------
+.vscode/
+
+# -----------------------
+# Logs
+# -----------------------
+*.log
+
+# -----------------------
+# OS
+# -----------------------
+.DS_Store
+Thumbs.db
+
+# Knowledge base documents
+documents/
