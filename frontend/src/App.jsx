@@ -4,6 +4,7 @@ import Layout from "./layout/Layout";
 
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
+import Equipment360 from "./pages/Equipment360";
 import Chat from "./pages/Chat";
 import Documents from "./pages/Documents";
 import Compliance from "./pages/Compliance";
@@ -13,12 +14,27 @@ function App() {
     <BrowserRouter>
       <Layout>
         <Routes>
+
           <Route path="/" element={<Dashboard />} />
+
           <Route path="/assets" element={<Assets />} />
+
+          <Route
+            path="/equipment/:tag"
+            element={<Equipment360 />}
+          />
+
           <Route path="/documents" element={<Documents />} />
+
           <Route path="/chat" element={<Chat />} />
+
           <Route path="/compliance" element={<Compliance />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+
+          <Route
+            path="*"
+            element={<Navigate to="/" replace />}
+          />
+
         </Routes>
       </Layout>
     </BrowserRouter>
