@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+
 import PageHeader from "../components/PageHeader";
 import EquipmentHeader from "../components/EquipmentHeader";
-import IntelligenceSummary from "../components/IntelligenceSummary";
+import EquipmentHealthCard from "../components/EquipmentHealthCard";
+import KeyFindingsCard from "../components/KeyFindingsCard";
+import RecommendationsCard from "../components/RecommendationsCard";
 import DocumentSection from "../components/DocumentSection";
+
+import extractRecommendations from "../utils/extractRecommendations";
 import { getEquipment } from "../services/assetService";
 
 function Equipment360() {
 
+    const { tag } = useParams();
+
     const [equipment, setEquipment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-
-    const { tag } = useParams();
 
     useEffect(() => {
         fetchEquipment();
@@ -39,6 +44,7 @@ function Equipment360() {
     };
 
     if (loading) {
+
         return (
             <>
                 <PageHeader
@@ -51,9 +57,11 @@ function Equipment360() {
                 </div>
             </>
         );
+
     }
 
     if (error) {
+
         return (
             <>
                 <PageHeader
@@ -66,9 +74,15 @@ function Equipment360() {
                 </div>
             </>
         );
+
     }
 
+    const recommendations = extractRecommendations(
+        equipment.intelligence_summary
+    );
+
     return (
+
         <>
 
             <PageHeader
@@ -81,11 +95,27 @@ function Equipment360() {
                 totalDocuments={equipment.total_documents_found}
             />
 
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
-                <IntelligenceSummary
+                <EquipmentHealthCard
+                    status="Warning"
                     summary={equipment.intelligence_summary}
                 />
+
+                <KeyFindingsCard
+                    workOrders={equipment.work_orders}
+                    incidents={equipment.incidents}
+                    inspections={equipment.inspections}
+                    regulations={equipment.regulations}
+                />
+
+            </div>
+
+            <RecommendationsCard
+                recommendations={recommendations}
+            />
+
+            <div className="space-y-6 mt-6">
 
                 <DocumentSection
                     title="Work Orders"
@@ -114,6 +144,7 @@ function Equipment360() {
             </div>
 
         </>
+
     );
 
 }
