@@ -48,7 +48,8 @@ function Dashboard() {
         {
             title: "System Status",
             value: stats
-                ? stats.status.charAt(0).toUpperCase() + stats.status.slice(1)
+                ? ((stats.backend || "Unknown").charAt(0).toUpperCase() +
+                    (stats.backend || "Unknown").slice(1))
                 : "...",
             color: "text-green-600",
         },
