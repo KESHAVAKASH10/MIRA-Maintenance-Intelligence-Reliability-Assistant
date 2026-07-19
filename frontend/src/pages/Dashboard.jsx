@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import PageHeader from "../components/PageHeader";
 import PlantStatusBanner from "../components/PlantStatusBanner";
 import StatusCard from "../components/StatusCard";
@@ -6,8 +8,52 @@ import InsightCard from "../components/InsightCard";
 import QuickActionCard from "../components/QuickActionCard";
 
 import { dashboardData } from "../data/dashboardData";
+import { getDashboardStats } from "../services/dashboardService";
 
 function Dashboard() {
+
+    const [stats, setStats] = useState(null);
+
+    useEffect(() => {
+
+        async function loadStats() {
+            try {
+                const data = await getDashboardStats();
+                setStats(data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        loadStats();
+
+    }, []);
+
+    const summary = [
+        {
+            title: "Documents Indexed",
+            value: stats ? stats.total_documents : "...",
+            color: "text-blue-600",
+        },
+        {
+            title: "Knowledge Chunks",
+            value: stats ? stats.total_chunks : "...",
+            color: "text-purple-600",
+        },
+        {
+            title: "Critical Assets",
+            value: dashboardData.summary[1].value,
+            color: "text-red-600",
+        },
+        {
+            title: "System Status",
+            value: stats
+                ? stats.status.charAt(0).toUpperCase() + stats.status.slice(1)
+                : "...",
+            color: "text-green-600",
+        },
+    ];
+
     return (
         <>
             <PageHeader
@@ -18,7 +64,7 @@ function Dashboard() {
             <PlantStatusBanner plant={dashboardData.plant} />
 
             <div className="grid grid-cols-4 gap-6 mb-8">
-                {dashboardData.summary.map((card) => (
+                {summary.map((card) => (
                     <StatusCard
                         key={card.title}
                         title={card.title}
