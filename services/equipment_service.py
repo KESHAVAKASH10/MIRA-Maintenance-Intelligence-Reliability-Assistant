@@ -1,4 +1,5 @@
 from services.context_builder import ContextBuilder
+from services.predictive.predictive_service import PredictiveService
 
 
 class EquipmentService:
@@ -18,6 +19,8 @@ class EquipmentService:
         self.llm = llm
 
         self.builder = ContextBuilder()
+
+        self.predictive = PredictiveService()
 
     def get_equipment_report(
 
@@ -41,11 +44,9 @@ class EquipmentService:
 
         confidence_label = result["confidence_label"]
 
-        graph = result.get(
+        graph = self.engine.get_equipment_graph(
 
-            "graph",
-
-            {}
+            equipment_tag
 
         )
 
@@ -59,29 +60,21 @@ class EquipmentService:
 
                 "message": f"No information found for {equipment_tag}.",
 
-                "intelligence_summary": "",
-
-                "work_orders": [],
-
-                "incidents": [],
-
-                "inspections": [],
-
-                "manuals": [],
-
-                "regulations": [],
-
-                "related_assets": [],
-
-                "graph": {},
-
                 "confidence": confidence,
 
                 "confidence_label": confidence_label,
 
+                "knowledge_graph": graph,
+
                 "total_documents_found": 0
 
             }
+
+        prediction = self.predictive.predict(
+
+            documents
+
+        )
 
         prompt = self.builder.build_equipment_prompt(
 
@@ -123,8 +116,6 @@ class EquipmentService:
 
         regulations = []
 
-        related_assets = set()
-
         for item in documents:
 
             meta = item["metadata"]
@@ -138,20 +129,6 @@ class EquipmentService:
                 "preview": item["document"][:200]
 
             }
-
-            equipment = meta.get(
-
-                "equipment_tag"
-
-            )
-
-            if equipment:
-
-                related_assets.add(
-
-                    equipment
-
-                )
 
             doc_type = meta.get(
 
@@ -191,17 +168,25 @@ class EquipmentService:
 
             "confidence_label": confidence_label,
 
-            "graph": graph,
+            "knowledge_graph": graph,
 
-            "related_assets": sorted(
+            "health_score": prediction["health_score"],
 
-                list(
+            "risk_score": prediction["risk_score"],
 
-                    related_assets
+            "risk_level": prediction["risk_level"],
 
-                )
+            "risk_color": prediction["risk_color"],
 
-            ),
+            "failure_probability": prediction["failure_probability"],
+
+            "remaining_useful_life_days": prediction["remaining_useful_life_days"],
+
+            "maintenance_priority": prediction["maintenance_priority"],
+
+            "recommendations": prediction["recommendations"],
+
+            "statistics": prediction["statistics"],
 
             "work_orders": work_orders,
 
