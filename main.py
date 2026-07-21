@@ -12,6 +12,8 @@ from openai import OpenAI
 from services.knowledge_engine import KnowledgeEngine
 from services.chat_service import ChatService
 from services.equipment_service import EquipmentService
+from services.graph.graph_service import GraphService
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -37,6 +39,8 @@ llm = OpenAI(
 
 knowledge_engine = KnowledgeEngine()
 
+graph_service = GraphService()
+
 chat_service = ChatService(
     knowledge_engine,
     llm
@@ -53,6 +57,13 @@ print("MIRA Backend Ready.")
 class QuestionRequest(BaseModel):
     question: str
     equipment_tag: str | None = None
+
+
+class GraphPathRequest(BaseModel):
+
+    source: str
+
+    target: str
 
 
 @app.get("/")
@@ -216,37 +227,101 @@ def ask_question(
         )
 
 
+@app.get("/graph/stats")
+def graph_stats():
+
+    return graph_service.statistics()
+
+
+@app.post("/graph/rebuild")
+def rebuild_graph():
+
+    return graph_service.rebuild()
+
+
+@app.get("/graph/equipment/{tag}")
+def equipment_graph(tag: str):
+
+    try:
+
+        return graph_service.equipment_graph(
+
+            tag.upper()
+
+        )
+
+    except Exception as e:
+
+        raise HTTPException(
+
+            status_code=500,
+
+            detail=str(e)
+
+        )
+
+
+@app.post("/graph/path")
+def graph_path(request: GraphPathRequest):
+
+    try:
+
+        path = graph_service.shortest_path(
+
+            request.source,
+
+            request.target
+
+        )
+
+        return {
+
+            "source": request.source,
+
+            "target": request.target,
+
+            "path": path,
+
+            "length": len(path)
+
+        }
+
+    except Exception as e:
+
+        raise HTTPException(
+
+            status_code=500,
+
+            detail=str(e)
+
+        )
+
+
 @app.get("/reload")
 def reload_knowledge():
 
     global knowledge_engine
+    global graph_service
     global chat_service
     global equipment_service
 
     knowledge_engine = KnowledgeEngine()
 
+    graph_service = GraphService()
+
     chat_service = ChatService(
-
         knowledge_engine,
-
         llm
-
     )
 
     equipment_service = EquipmentService(
-
         knowledge_engine,
-
         llm
-
     )
 
     return {
-
         "status": "success",
-
-        "message": "Knowledge engine reloaded."
-
+        "message": "Knowledge engine and graph reloaded."
     }
 
 
