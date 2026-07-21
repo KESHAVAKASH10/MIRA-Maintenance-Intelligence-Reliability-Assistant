@@ -243,3 +243,16 @@ class KnowledgeEngine:
             target
 
         )
+    def get_equipment_graph(
+
+    self,
+
+    equipment_tag
+
+):
+
+    return self.graph.equipment_graph(
+
+        equipment_tag
+
+    )
