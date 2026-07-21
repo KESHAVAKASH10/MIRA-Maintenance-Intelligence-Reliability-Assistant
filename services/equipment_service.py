@@ -41,6 +41,14 @@ class EquipmentService:
 
         confidence_label = result["confidence_label"]
 
+        graph = result.get(
+
+            "graph",
+
+            {}
+
+        )
+
         if len(documents) == 0:
 
             return {
@@ -62,6 +70,10 @@ class EquipmentService:
                 "manuals": [],
 
                 "regulations": [],
+
+                "related_assets": [],
+
+                "graph": {},
 
                 "confidence": confidence,
 
@@ -97,7 +109,7 @@ class EquipmentService:
 
             temperature=0.1,
 
-            max_tokens=500
+            max_tokens=600
 
         )
 
@@ -110,6 +122,8 @@ class EquipmentService:
         manuals = []
 
         regulations = []
+
+        related_assets = set()
 
         for item in documents:
 
@@ -124,6 +138,20 @@ class EquipmentService:
                 "preview": item["document"][:200]
 
             }
+
+            equipment = meta.get(
+
+                "equipment_tag"
+
+            )
+
+            if equipment:
+
+                related_assets.add(
+
+                    equipment
+
+                )
 
             doc_type = meta.get(
 
@@ -162,6 +190,18 @@ class EquipmentService:
             "confidence": confidence,
 
             "confidence_label": confidence_label,
+
+            "graph": graph,
+
+            "related_assets": sorted(
+
+                list(
+
+                    related_assets
+
+                )
+
+            ),
 
             "work_orders": work_orders,
 
