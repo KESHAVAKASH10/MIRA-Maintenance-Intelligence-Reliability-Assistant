@@ -3,6 +3,7 @@ from services.bm25_search import BM25Search
 from services.reranker import Reranker
 from services.context_builder import ContextBuilder
 from services.confidence import ConfidenceCalculator
+from services.graph.graph_service import GraphService
 
 import chromadb
 
@@ -32,6 +33,8 @@ class KnowledgeEngine:
         self.context_builder = ContextBuilder()
 
         self.confidence = ConfidenceCalculator()
+
+        self.graph = GraphService()
 
         print("Knowledge Engine Ready.")
 
@@ -131,6 +134,16 @@ class KnowledgeEngine:
 
         )
 
+        graph_information = {}
+
+        if equipment_tag:
+
+            graph_information = self.graph.equipment_graph(
+
+                equipment_tag
+
+            )
+
         return {
 
             "documents": documents,
@@ -139,7 +152,9 @@ class KnowledgeEngine:
 
             "confidence": confidence,
 
-            "confidence_label": confidence_label
+            "confidence_label": confidence_label,
+
+            "graph": graph_information
 
         }
 
@@ -178,5 +193,53 @@ class KnowledgeEngine:
             equipment_tag=equipment_tag,
 
             top_k=8
+
+        )
+
+    def graph_statistics(
+
+        self
+
+    ):
+
+        return self.graph.statistics()
+
+    def rebuild_graph(
+
+        self
+
+    ):
+
+        return self.graph.rebuild()
+
+    def equipment_graph(
+
+        self,
+
+        equipment_tag
+
+    ):
+
+        return self.graph.equipment_graph(
+
+            equipment_tag
+
+        )
+
+    def shortest_path(
+
+        self,
+
+        source,
+
+        target
+
+    ):
+
+        return self.graph.shortest_path(
+
+            source,
+
+            target
 
         )
