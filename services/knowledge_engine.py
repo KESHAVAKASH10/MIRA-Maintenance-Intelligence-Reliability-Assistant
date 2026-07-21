@@ -226,6 +226,20 @@ class KnowledgeEngine:
 
         )
 
+    def get_equipment_graph(
+
+        self,
+
+        equipment_tag
+
+    ):
+
+        return self.graph.equipment_graph(
+
+            equipment_tag
+
+        )
+
     def shortest_path(
 
         self,
@@ -243,16 +257,3 @@ class KnowledgeEngine:
             target
 
         )
-    def get_equipment_graph(
-
-    self,
-
-    equipment_tag
-
-):
-
-    return self.graph.equipment_graph(
-
-        equipment_tag
-
-    )
