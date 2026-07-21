@@ -1,20 +1,20 @@
 import os
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-
 from pathlib import Path
 import shutil
 
 from dotenv import load_dotenv
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
+from pydantic import BaseModel
 
 from services.knowledge_engine import KnowledgeEngine
 from services.chat_service import ChatService
 from services.equipment_service import EquipmentService
 from services.graph.graph_service import GraphService
 from services.predictive.predictive_service import PredictiveService
-from pydantic import BaseModel
+from services.document_service import DocumentService
+
 
 load_dotenv()
 
@@ -54,11 +54,15 @@ equipment_service = EquipmentService(
     llm
 )
 
+document_service = DocumentService()
+
 print("MIRA Backend Ready.")
 
 
 class QuestionRequest(BaseModel):
+
     question: str
+
     equipment_tag: str | None = None
 
 
@@ -73,15 +77,21 @@ class GraphPathRequest(BaseModel):
 def root():
 
     return {
+
         "status": "MIRA is running",
+
         "version": "2.0.0"
+
     }
+
 
 @app.get("/health")
 def health():
 
     documents = list(
+
         Path("documents").glob("*.pdf")
+
     )
 
     return {
@@ -116,7 +126,9 @@ def health():
 def get_stats():
 
     documents = list(
+
         Path("documents").glob("*.pdf")
+
     )
 
     return {
@@ -144,6 +156,50 @@ def get_stats():
     }
 
 
+@app.get("/documents")
+def get_documents():
+
+    return document_service.get_all_documents()
+
+
+@app.get("/documents/search/{query}")
+def search_documents(
+
+    query: str
+
+):
+
+    return document_service.search(
+
+        query
+
+    )
+
+
+@app.get("/documents/{filename}")
+def get_document(
+
+    filename: str
+
+):
+
+    document = document_service.get_document(
+
+        filename
+
+    )
+
+    if document is None:
+
+        raise HTTPException(
+
+            status_code=404,
+
+            detail="Document not found."
+
+        )
+
+    return document
 @app.post("/upload")
 async def upload_document(
 
@@ -303,7 +359,11 @@ def rebuild_graph():
 
 
 @app.get("/graph/equipment/{tag}")
-def equipment_graph(tag: str):
+def equipment_graph(
+
+    tag: str
+
+):
 
     try:
 
@@ -325,7 +385,11 @@ def equipment_graph(tag: str):
 
 
 @app.post("/graph/path")
-def graph_path(request: GraphPathRequest):
+def graph_path(
+
+    request: GraphPathRequest
+
+):
 
     try:
 
@@ -358,8 +422,6 @@ def graph_path(request: GraphPathRequest):
             detail=str(e)
 
         )
-
-
 @app.get("/reload")
 def reload_knowledge():
 
@@ -368,6 +430,7 @@ def reload_knowledge():
     global graph_service
     global chat_service
     global equipment_service
+    global document_service
 
     knowledge_engine = KnowledgeEngine()
 
@@ -376,18 +439,29 @@ def reload_knowledge():
     graph_service = GraphService()
 
     chat_service = ChatService(
+
         knowledge_engine,
+
         llm
+
     )
 
     equipment_service = EquipmentService(
+
         knowledge_engine,
+
         llm
+
     )
 
+    document_service = DocumentService()
+
     return {
+
         "status": "success",
-        "message": "Knowledge engine and graph reloaded."
+
+        "message": "Knowledge engine, graph, and document service reloaded."
+
     }
 
 
