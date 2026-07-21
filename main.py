@@ -13,6 +13,7 @@ from services.knowledge_engine import KnowledgeEngine
 from services.chat_service import ChatService
 from services.equipment_service import EquipmentService
 from services.graph.graph_service import GraphService
+from services.predictive.predictive_service import PredictiveService
 from pydantic import BaseModel
 
 load_dotenv()
@@ -38,6 +39,8 @@ llm = OpenAI(
 )
 
 knowledge_engine = KnowledgeEngine()
+
+predictive_service = PredictiveService()
 
 graph_service = GraphService()
 
@@ -74,9 +77,12 @@ def root():
         "version": "2.0.0"
     }
 
-
 @app.get("/health")
 def health():
+
+    documents = list(
+        Path("documents").glob("*.pdf")
+    )
 
     return {
 
@@ -84,6 +90,15 @@ def health():
 
         "chunks_indexed":
         knowledge_engine.vector.collection.count(),
+
+        "documents":
+        len(documents),
+
+        "graph_nodes":
+        knowledge_engine.graph_statistics()["nodes"],
+
+        "graph_edges":
+        knowledge_engine.graph_statistics()["edges"],
 
         "embedding_model":
         "BAAI/bge-small-en-v1.5",
@@ -94,7 +109,10 @@ def health():
         "llm":
         "meta/llama-3.1-70b-instruct"
 
-    }@app.get("/stats")
+    }
+
+
+@app.get("/stats")
 def get_stats():
 
     documents = list(
@@ -110,6 +128,9 @@ def get_stats():
 
         "total_documents":
         len(documents),
+
+        "graph":
+        knowledge_engine.graph_statistics(),
 
         "documents":
         [
@@ -199,6 +220,48 @@ def get_equipment_intelligence(
             detail=str(e)
 
         )
+
+
+@app.get("/predict/{equipment_tag}")
+def predict_equipment_health(
+
+    equipment_tag: str
+
+):
+
+    try:
+
+        result = knowledge_engine.equipment_search(
+
+            equipment_tag.upper()
+
+        )
+
+        prediction = predictive_service.predict(
+
+            result["documents"]
+
+        )
+
+        prediction["equipment_tag"] = equipment_tag.upper()
+
+        prediction["confidence"] = result["confidence"]
+
+        prediction["confidence_label"] = result["confidence_label"]
+
+        return prediction
+
+    except Exception as e:
+
+        raise HTTPException(
+
+            status_code=500,
+
+            detail=str(e)
+
+        )
+
+
 @app.post("/ask")
 def ask_question(
 
@@ -227,10 +290,10 @@ def ask_question(
         )
 
 
-@app.get("/graph/stats")
-def graph_stats():
+@app.get("/graph/statistics")
+def graph_statistics():
 
-    return graph_service.statistics()
+    return knowledge_engine.graph_statistics()
 
 
 @app.post("/graph/rebuild")
@@ -301,11 +364,14 @@ def graph_path(request: GraphPathRequest):
 def reload_knowledge():
 
     global knowledge_engine
+    global predictive_service
     global graph_service
     global chat_service
     global equipment_service
 
     knowledge_engine = KnowledgeEngine()
+
+    predictive_service = PredictiveService()
 
     graph_service = GraphService()
 
@@ -332,11 +398,13 @@ def version():
 
         "application": "MIRA",
 
-        "version": "2.0.0",
+        "version": "3.0.0",
 
         "backend": "FastAPI",
 
         "retrieval": "Hybrid Search (Vector + BM25 + Reranker)",
+
+        "prediction": "Predictive Intelligence Engine",
 
         "embedding_model": "BAAI/bge-small-en-v1.5",
 
