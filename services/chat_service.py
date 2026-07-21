@@ -45,6 +45,14 @@ class ChatService:
 
         confidence_label = result["confidence_label"]
 
+        graph = result.get(
+
+            "graph",
+
+            {}
+
+        )
+
         if len(documents) == 0:
 
             return {
@@ -56,6 +64,8 @@ class ChatService:
                 "confidence_label": confidence_label,
 
                 "sources": [],
+
+                "graph": {},
 
                 "equipment_tag": equipment_tag
 
@@ -87,7 +97,7 @@ class ChatService:
 
             temperature=0.1,
 
-            max_tokens=600
+            max_tokens=700
 
         )
 
@@ -133,6 +143,24 @@ class ChatService:
 
             )
 
+        related_assets = set()
+
+        for doc in documents:
+
+            equipment = doc["metadata"].get(
+
+                "equipment_tag"
+
+            )
+
+            if equipment:
+
+                related_assets.add(
+
+                    equipment
+
+                )
+
         return {
 
             "answer": response.choices[0].message.content,
@@ -142,6 +170,18 @@ class ChatService:
             "confidence_label": confidence_label,
 
             "sources": sources,
+
+            "graph": graph,
+
+            "related_assets": sorted(
+
+                list(
+
+                    related_assets
+
+                )
+
+            ),
 
             "equipment_tag": equipment_tag
 
