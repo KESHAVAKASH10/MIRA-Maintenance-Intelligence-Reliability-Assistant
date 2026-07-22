@@ -300,9 +300,6 @@ GET /documents/search/{query}
 
 ---
 
-# Team
-
-**Project Name**
 
 MIRA — Maintenance Intelligence & Reliability Assistant
 
