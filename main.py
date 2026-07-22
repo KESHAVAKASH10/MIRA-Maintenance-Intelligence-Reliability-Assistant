@@ -14,7 +14,7 @@ from services.equipment_service import EquipmentService
 from services.graph.graph_service import GraphService
 from services.predictive.predictive_service import PredictiveService
 from services.document_service import DocumentService
-
+from services.compliance.compliance_service import ComplianceService
 
 load_dotenv()
 
@@ -39,6 +39,9 @@ llm = OpenAI(
 )
 
 knowledge_engine = KnowledgeEngine()
+compliance_service = ComplianceService(
+    knowledge_engine
+)
 
 predictive_service = PredictiveService()
 
@@ -487,6 +490,12 @@ def version():
         "llm": "meta/llama-3.1-70b-instruct"
 
     }
+@app.get("/compliance/{equipment_tag}")
+def compliance(equipment_tag):
+
+    return compliance_service.check(
+        equipment_tag
+    )
 
 
 if __name__ == "__main__":

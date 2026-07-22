@@ -10,12 +10,14 @@ import DocumentSection from "../components/DocumentSection";
 
 import extractRecommendations from "../utils/extractRecommendations";
 import { getEquipment } from "../services/assetService";
+import KnowledgeGraphCard from "../components/KnowledgeGraphCard";
+import { getEquipmentGraph } from "../services/graphService";
 
 function Equipment360() {
-
     const { tag } = useParams();
 
     const [equipment, setEquipment] = useState(null);
+    const [graph, setGraph] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -24,27 +26,20 @@ function Equipment360() {
     }, [tag]);
 
     const fetchEquipment = async () => {
-
         try {
-
             const data = await getEquipment(tag);
-
             setEquipment(data);
 
+            const graphData = await getEquipmentGraph(tag);
+            setGraph(graphData);
         } catch (err) {
-
             setError("Unable to load equipment intelligence.");
-
         } finally {
-
             setLoading(false);
-
         }
-
     };
 
     if (loading) {
-
         return (
             <>
                 <PageHeader
@@ -57,11 +52,9 @@ function Equipment360() {
                 </div>
             </>
         );
-
     }
 
     if (error) {
-
         return (
             <>
                 <PageHeader
@@ -74,17 +67,41 @@ function Equipment360() {
                 </div>
             </>
         );
-
     }
 
     const recommendations = extractRecommendations(
         equipment.intelligence_summary
     );
 
+    // Documents from Knowledge Graph
+    const docs = graph?.documents || [];
+
+    const workOrders = docs.filter((d) =>
+        (d.label || "").includes("WO_")
+    );
+
+    const incidents = docs.filter(
+        (d) =>
+            (d.label || "").includes("INC_") ||
+            (d.label || "").includes("Near_Miss") ||
+            (d.label || "").includes("RCA_")
+    );
+
+    const inspections = docs.filter(
+        (d) =>
+            (d.label || "").includes("Inspection") ||
+            (d.label || "").includes("Shift")
+    );
+
+    const regulations = docs.filter(
+        (d) =>
+            (d.label || "").includes("OISD") ||
+            (d.label || "").includes("Compliance") ||
+            (d.label || "").includes("Factories")
+    );
+
     return (
-
         <>
-
             <PageHeader
                 title="Equipment 360"
                 subtitle="Complete Industrial Asset Intelligence"
@@ -96,57 +113,56 @@ function Equipment360() {
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-
                 <EquipmentHealthCard
                     status="Warning"
                     summary={equipment.intelligence_summary}
                 />
 
                 <KeyFindingsCard
-                    workOrders={equipment.work_orders}
-                    incidents={equipment.incidents}
-                    inspections={equipment.inspections}
-                    regulations={equipment.regulations}
+                    workOrders={workOrders}
+                    incidents={incidents}
+                    inspections={inspections}
+                    regulations={regulations}
                 />
-
             </div>
 
             <RecommendationsCard
                 recommendations={recommendations}
             />
 
-            <div className="space-y-6 mt-6">
+            <div className="mt-6">
+                <KnowledgeGraphCard
+                    graph={graph}
+                />
+            </div>
 
+            <div className="space-y-6 mt-6">
                 <DocumentSection
                     title="Work Orders"
                     icon="📄"
-                    documents={equipment.work_orders}
+                    documents={workOrders}
                 />
 
                 <DocumentSection
                     title="Incident Reports"
                     icon="⚠"
-                    documents={equipment.incidents}
+                    documents={incidents}
                 />
 
                 <DocumentSection
                     title="Inspection Records"
                     icon="🔍"
-                    documents={equipment.inspections}
+                    documents={inspections}
                 />
 
                 <DocumentSection
                     title="Standards & Regulations"
                     icon="📚"
-                    documents={equipment.regulations}
+                    documents={regulations}
                 />
-
             </div>
-
         </>
-
     );
-
 }
 
 export default Equipment360;
